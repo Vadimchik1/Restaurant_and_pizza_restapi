@@ -65,3 +65,26 @@ def pizzas_list(request):
             return JsonResponse(serializer.data, status=201)
 
 
+@csrf_exempt
+@swagger_auto_schema(method='PUT', request_body=PizzaSerializer)
+@api_view(['PUT', 'DELETE', 'GET'])
+def pizzas_detail(request, pk):
+    try:
+        pizza = Pizza.objects.get(pk=pk)
+    except PizzaSerializer.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if request.method == 'GET':
+        serializer = PizzaSerializer(pizza)
+        return JsonResponse(serializer.data)
+
+    elif request.method == 'PUT':
+        data = JSONParser().parse(request)
+        serializer = PizzaSerializer(pizza, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data)
+        return JsonResponse(serializer.errors, status=400)
+    elif request.method == 'DELETE':
+        pizza.delete()
+        return HttpResponse(status=204)
